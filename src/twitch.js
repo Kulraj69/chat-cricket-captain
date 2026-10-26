@@ -8,22 +8,23 @@ function cleanToken(value = '') {
 }
 
 class TwitchBridge {
-  constructor({ onMessage, onEvent, onStatus = () => {} }) {
+  constructor({ onMessage, onEvent, onStatus = () => {}, env = process.env }) {
+    this.env = env;
     this.onMessage = onMessage;
     this.onEvent = onEvent;
     this.onStatus = onStatus;
-    this.channel = process.env.TWITCH_CHANNEL;
+    this.channel = this.env.TWITCH_CHANNEL;
     this.chat = null;
     this.eventSocket = null;
     this.intentionalClose = false;
   }
 
   get chatConfigured() {
-    return Boolean(this.channel && process.env.TWITCH_BOT_USERNAME && process.env.TWITCH_OAUTH_TOKEN);
+    return Boolean(this.channel && this.env.TWITCH_BOT_USERNAME && this.env.TWITCH_OAUTH_TOKEN);
   }
 
   get eventSubConfigured() {
-    return Boolean(process.env.TWITCH_CLIENT_ID && process.env.TWITCH_USER_OAUTH_TOKEN && this.channel);
+    return Boolean(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_USER_OAUTH_TOKEN && this.channel);
   }
 
   async start() {
@@ -34,8 +35,8 @@ class TwitchBridge {
     this.chat = new tmi.Client({
       options: { debug: false },
       identity: {
-        username: process.env.TWITCH_BOT_USERNAME,
-        password: process.env.TWITCH_OAUTH_TOKEN
+        username: this.env.TWITCH_BOT_USERNAME,
+        password: this.env.TWITCH_OAUTH_TOKEN
       },
       channels: [this.channel]
     });
@@ -56,20 +57,20 @@ class TwitchBridge {
 
   async announce(text) {
     if (!this.chat || !text) return;
-    try { await this.chat.say(this.channel, text); } catch (error) { this.onStatus(`Chat announce failed: ${error.message}`); }
+    try { await this.chat.say(this.channel, text); } catch (error) { this.onStatus('Chat announce failed; check connection and bot permissions'); }
   }
 
   async helix(path, options = {}) {
     const response = await fetch(`https://api.twitch.tv/helix${path}`, {
       ...options,
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${cleanToken(process.env.TWITCH_USER_OAUTH_TOKEN)}`,
+        'Client-Id': this.env.TWITCH_CLIENT_ID,
+        Authorization: `Bearer ${cleanToken(this.env.TWITCH_USER_OAUTH_TOKEN)}`,
         'Content-Type': 'application/json',
         ...(options.headers || {})
       }
     });
-    if (!response.ok) throw new Error(`Helix ${response.status}: ${await response.text()}`);
+    if (!response.ok) throw new Error(`Helix request failed (${response.status})`);
     return response.json();
   }
 
@@ -93,10 +94,10 @@ class TwitchBridge {
         }
         if (kind === 'notification') this.routeNotification(packet.payload);
       } catch (error) {
-        this.onStatus(`EventSub message error: ${error.message}`);
+        this.onStatus('EventSub message failed; check connection and permissions');
       }
     });
-    this.eventSocket.on('error', error => this.onStatus(`EventSub error: ${error.message}`));
+    this.eventSocket.on('error', error => this.onStatus('EventSub connection error'));
     this.eventSocket.on('close', () => {
       if (!this.intentionalClose) setTimeout(() => this.connectEventSub(), 3000).unref();
     });
@@ -104,8 +105,8 @@ class TwitchBridge {
 
   async subscribeEventSub(sessionId) {
     try {
-      const broadcasterId = process.env.TWITCH_BROADCASTER_ID || await this.userId(this.channel);
-      const moderatorId = process.env.TWITCH_MODERATOR_ID || broadcasterId;
+      const broadcasterId = this.env.TWITCH_BROADCASTER_ID || await this.userId(this.channel);
+      const moderatorId = this.env.TWITCH_MODERATOR_ID || broadcasterId;
       const subscriptions = [
         ['channel.channel_points_custom_reward_redemption.add', '1', { broadcaster_user_id: broadcasterId }],
         ['channel.cheer', '1', { broadcaster_user_id: broadcasterId }],
@@ -120,7 +121,7 @@ class TwitchBridge {
       }
       this.onStatus('EventSub connected (redemptions, cheers, raids, follows)');
     } catch (error) {
-      this.onStatus(`EventSub setup failed: ${error.message}`);
+      this.onStatus('EventSub setup failed; check user token and scopes');
     }
   }
 

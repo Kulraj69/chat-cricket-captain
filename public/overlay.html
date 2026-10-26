@@ -3,57 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Chat Cricket Captain — Overlay</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@500;700;800&display=swap');
-    :root{--lime:#d9ff43;--ink:#091310;--cream:#fff8e7;--orange:#ff6433;--cyan:#5be7da;--panel:rgba(7,21,17,.92)}
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;color:var(--cream);font-family:Inter,system-ui,sans-serif}
-    body{padding:46px 54px;background:radial-gradient(circle at 50% 120%,rgba(41,168,107,.22),transparent 48%)}
-    .top{display:flex;align-items:stretch;gap:16px;height:136px}.brand{width:300px;background:var(--lime);color:var(--ink);padding:20px 28px;clip-path:polygon(0 0,92% 0,100% 50%,92% 100%,0 100%)}
-    .eyebrow{font:700 15px Inter;letter-spacing:.18em}.brand h1{font:800 37px/32px 'Barlow Condensed';margin:9px 0;text-transform:uppercase}
-    .score{min-width:430px;background:var(--panel);border-bottom:5px solid var(--lime);display:flex;align-items:center;padding:17px 30px;gap:28px;box-shadow:0 18px 45px #0006}
-    .runs{font:800 76px/1 'Barlow Condensed'}.meta{border-left:1px solid #ffffff30;padding-left:27px}.label{color:#b9c8c1;font-size:15px;text-transform:uppercase;letter-spacing:.12em}.target{font:700 24px 'Barlow Condensed';margin-top:5px}
-    .badge{align-self:center;padding:12px 20px;background:var(--orange);color:#fff;font-weight:800;letter-spacing:.08em;transform:skew(-7deg);box-shadow:0 8px 25px #0005;opacity:0;transition:.25s}.badge.show{opacity:1;animation:pulse 1s infinite alternate}
-    .stage{position:absolute;left:54px;right:54px;top:210px;bottom:180px;display:grid;grid-template-columns:385px 1fr 310px;gap:30px;align-items:end}
-    .card{background:var(--panel);border:1px solid #ffffff20;border-radius:15px;box-shadow:0 20px 55px #0007;overflow:hidden}.card-head{padding:17px 22px;border-bottom:1px solid #ffffff1c;display:flex;justify-content:space-between;align-items:center}.card-head h2{font:800 22px 'Barlow Condensed';margin:0;text-transform:uppercase;letter-spacing:.06em}.count{color:var(--lime);font-weight:800}
-    .votes{padding:17px 20px 22px}.vote{margin:11px 0}.vote-row{display:flex;justify-content:space-between;font:700 14px Inter;text-transform:uppercase;margin-bottom:7px}.track{height:12px;background:#ffffff16;border-radius:8px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--lime));border-radius:8px;transition:width .45s cubic-bezier(.2,.8,.2,1)}
-    .pitch-wrap{height:100%;position:relative;display:flex;align-items:end;justify-content:center}.pitch{height:82%;width:310px;background:linear-gradient(90deg,#b79a65,#ddc68e 28%,#ddc68e 72%,#b79a65);transform:perspective(680px) rotateX(48deg);transform-origin:bottom;border:5px solid #e6d3a0;box-shadow:0 22px 70px #0008;position:relative}.crease{position:absolute;left:-24px;right:-24px;height:5px;background:#fff}.crease.top{top:14%}.crease.bottom{bottom:14%}
-    .ball{position:absolute;left:calc(50% - 13px);top:10%;width:27px;height:27px;background:radial-gradient(circle at 32% 28%,#ff765b,#bc1c20 55%,#50090c);border-radius:50%;box-shadow:0 6px 10px #0008;opacity:0;z-index:2}.ball.go{animation:bowl 1.55s cubic-bezier(.35,.02,.75,.9)}
-    .bat{position:absolute;bottom:5%;left:calc(50% + 35px);width:16px;height:128px;background:linear-gradient(90deg,#a76c2e,#f4ca78,#8d5527);border-radius:5px;transform:rotate(8deg);transform-origin:bottom;z-index:3}.bat.hit{animation:swing .55s .95s ease-out}.status{position:absolute;top:5%;left:50%;transform:translateX(-50%);font:800 26px 'Barlow Condensed';background:#091310dd;border:1px solid #ffffff30;padding:11px 22px;border-radius:40px;white-space:nowrap}.timer{color:var(--lime)}
-    .mvp{padding:14px 19px 20px}.person{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:13px 2px;border-bottom:1px solid #ffffff14}.rank{color:var(--lime);font:800 20px 'Barlow Condensed'}.name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}.pts{color:#b8c8c0;font:700 13px Inter}.empty{padding:20px;color:#9aaaa2;text-align:center}
-    .ticker{position:absolute;left:54px;right:54px;bottom:48px;height:96px;background:var(--panel);border-left:8px solid var(--orange);display:flex;align-items:center;padding:12px 34px;box-shadow:0 18px 50px #0008}.mic{font-size:32px;margin-right:23px}.line{font:700 29px/1.2 'Barlow Condensed';letter-spacing:.01em}.commands{position:absolute;right:55px;top:60px;color:#0a1511;background:var(--cream);padding:9px 18px;font:800 14px Inter;letter-spacing:.04em}
-    .flash{animation:flash .5s}.result{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.4);font:800 150px 'Barlow Condensed';color:var(--lime);text-shadow:0 8px 0 #0b1913,0 18px 50px #000;opacity:0;z-index:5}.result.show{animation:result 1.7s ease-out}.end{position:absolute;inset:0;background:#071510e8;display:none;align-items:center;justify-content:center;z-index:10;text-align:center}.end.show{display:flex}.end h2{font:800 100px 'Barlow Condensed';margin:0;color:var(--lime)}.end p{font-size:27px}
-    @keyframes bowl{0%{opacity:1;top:10%;transform:scale(.65)}65%{opacity:1;top:75%;transform:scale(1.1)}100%{opacity:0;top:91%;transform:translate(100px,-65px) scale(1.2)}}@keyframes swing{50%{transform:rotate(-58deg)}}@keyframes result{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%,70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1.25)}}@keyframes pulse{to{transform:skew(-7deg) scale(1.06)}}@keyframes flash{50%{filter:brightness(1.8)}}
-  </style>
+  <title>Chat Cricket Captain — Broadcast Overlay</title>
+  <link rel="stylesheet" href="/public/overlay.css">
+  <script src="/public/shared.js" defer></script>
+  <script src="/public/overlay.js" defer></script>
 </head>
 <body>
-  <div class="top">
-    <div class="brand"><div class="eyebrow">TWITCH CHAT PLAYS</div><h1>Chat Cricket<br>Captain</h1></div>
-    <div class="score" id="score"><div class="runs"><span id="runs">0</span>/<span id="wickets">0</span></div><div class="meta"><div class="label">Overs</div><div class="target"><span id="overs">0.0</span> / <span id="maxOvers">3</span></div></div><div class="meta"><div class="label">Target</div><div class="target" id="target">36</div></div></div>
-    <div class="badge" id="freeHit">⚡ FREE HIT</div><div class="badge" id="superOver">🔥 SUPER OVER</div>
-    <div class="commands">VOTE: !drive · !pull · !sweep · !defend · !six</div>
+  <div id="canvas" class="canvas">
+    <header class="scoreboard">
+      <div class="brand"><span class="eyebrow">THE COMMUNITY IS THE CAPTAIN</span><h1><span>CHAT CRICKET</span><br>CAPTAIN<span class="brand-dot">.</span></h1></div>
+      <div class="score-panel"><span class="eyebrow">CHAT XI · CHASING <span id="target">—</span></span><div class="score" id="score"><span id="runs">0</span><span class="slash">/</span><span id="wickets">0</span></div><span class="overs"><span id="overs">0.0</span> OVERS</span></div>
+      <div class="equation"><span class="eyebrow" id="chaseLabel">THE CHASE</span><div><strong id="needed">—</strong><span>RUNS FROM</span><strong id="remaining">—</strong><span>BALLS</span></div><div class="chase-track"><i id="chaseProgress"></i></div></div>
+    </header>
+    <div class="broadcast-meta"><span id="mode">CONNECTING</span><span id="connection" class="offline">● CONNECTING TO SCOREBOARD</span></div>
+    <main class="stage">
+      <section class="panel vote-panel">
+        <div class="panel-head"><h2>MAKE THE CALL</h2><span id="voteCount">0 VOTES</span></div>
+        <div class="vote-clock"><span id="voteLabel">VOTE IN CHAT</span><strong id="timer">—</strong></div>
+        <div class="clock-track"><i id="clockFill"></i></div>
+        <div id="votes" class="votes"></div>
+        <p class="panel-note" id="voteNote">One vote each. Change your mind anytime.</p>
+      </section>
+      <section class="arena" aria-label="Cricket delivery and match result">
+        <div class="ball-heading"><span class="eyebrow" id="ballNumber">READY FOR THE FIRST BALL</span><h2 id="ballStatus">YOUR CHAT. YOUR SHOT.</h2></div>
+        <div class="field"><div class="field-ring"></div><div class="pitch"><span class="crease crease-far"></span><span class="crease crease-near"></span><span class="stumps"></span></div><div id="ball" class="ball"></div><div id="bat" class="bat"></div></div>
+        <div id="moment" class="moment" aria-live="polite"><span id="momentDetail"></span><strong id="momentTitle"></strong></div>
+        <div id="end" class="end" hidden><span class="eyebrow" id="endKicker"></span><h2 id="endTitle"></h2><p id="endDetail"></p><span id="endMvp"></span></div>
+        <div class="recent"><span class="eyebrow">RECENT BALLS</span><div id="recentBalls" class="ball-strip"></div></div>
+      </section>
+      <aside class="right-rail">
+        <section class="panel powers"><div class="panel-head"><h2>CHAT CHANGES THE GAME</h2></div><div id="raidPower" class="power"><span>RAID</span><strong id="raidLabel">Trigger a Super Over</strong></div><div id="freePower" class="power"><span>CHEER</span><strong id="freeLabel">Protect the next wicket</strong></div><div id="drsPower" class="power"><span>DRS REWARD</span><strong id="drsLabel">Review a wicket</strong></div></section>
+        <section class="panel mvp-panel"><div class="panel-head"><h2>CHAT MVPs</h2><span>RUN CREDIT</span></div><ol id="mvp" class="mvp"></ol><p class="panel-note">Pick the winning shot. Share its runs.</p></section>
+      </aside>
+    </main>
+    <aside class="ticker"><div class="ticker-tag">FROM THE<br>COMMENTARY BOX</div><p id="commentary" aria-live="polite">Connect your chat. Captain the chase.</p></aside>
+    <footer><span>TYPE A SHOT → CHAT PICKS → THE BALL PLAYS OUT</span><span id="footerNote">!drive · !pull · !sweep · !defend · !six</span></footer>
   </div>
-  <main class="stage">
-    <section class="card"><div class="card-head"><h2>Chat's call</h2><span class="count" id="voteCount">0 votes</span></div><div class="votes" id="votes"></div></section>
-    <section class="pitch-wrap"><div class="status" id="status">Vote now · <span class="timer" id="timer">15</span>s</div><div class="result" id="result">SIX!</div><div class="ball" id="ball"></div><div class="bat" id="bat"></div><div class="pitch"><i class="crease top"></i><i class="crease bottom"></i></div></section>
-    <section class="card"><div class="card-head"><h2>Chat MVPs</h2><span>🏆</span></div><div class="mvp" id="mvp"><div class="empty">Vote to enter the XI</div></div></section>
-  </main>
-  <aside class="ticker"><span class="mic">🎙️</span><div class="line" id="commentary">Loading the pitch…</div></aside>
-  <div class="end" id="end"><div><h2 id="endTitle">CHAT WINS!</h2><p id="endDetail"></p></div></div>
-  <script>
-    const shots=['drive','pull','sweep','defend','six']; let current=null;
-    const $=id=>document.getElementById(id); const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    $('votes').innerHTML=shots.map(s=>`<div class="vote"><div class="vote-row"><span>!${s}</span><span id="n-${s}">0</span></div><div class="track"><div class="fill" id="b-${s}"></div></div></div>`).join('');
-    function render(s){current=s;$('runs').textContent=s.score;$('wickets').textContent=s.wickets;$('overs').textContent=s.overs;$('maxOvers').textContent=s.maxOvers;$('target').textContent=s.target;$('commentary').textContent=s.commentary;$('voteCount').textContent=`${s.totalVotes} vote${s.totalVotes===1?'':'s'}`;
-      const max=Math.max(1,...Object.values(s.tally));shots.forEach(x=>{$(`n-${x}`).textContent=s.tally[x];$(`b-${x}`).style.width=`${s.tally[x]/max*100}%`});
-      $('freeHit').classList.toggle('show',s.freeHitNext);$('superOver').classList.toggle('show',s.superOver);
-      $('mvp').innerHTML=s.mvp.length?s.mvp.map((p,i)=>`<div class="person"><span class="rank">${i+1}</span><span class="name">${esc(p.user)}</span><span class="pts">${p.runs} runs · ${p.votes} votes</span></div>`).join(''):'<div class="empty">Vote to enter the XI</div>';
-      const ended=s.status==='won'||s.status==='lost';$('end').classList.toggle('show',ended);if(ended){$('endTitle').textContent=s.status==='won'?'CHAT WINS!':'INNINGS OVER';$('endDetail').textContent=`${s.score}/${s.wickets} after ${s.overs} overs · Target ${s.target}`}
-      if(s.status==='resolved')$('status').textContent='Next ball loading…';
-    }
-    function animate(result){$('ball').classList.remove('go');$('bat').classList.remove('hit');void $('ball').offsetWidth;$('ball').classList.add('go');$('bat').classList.add('hit');setTimeout(()=>{const label=result.freeHitSaved?'NOT OUT':result.outcome==='W'?'OUT!':result.outcome==='0'?'DOT':`${result.outcome} RUN${result.outcome==='1'?'':'S'}!`;$('result').textContent=label;$('result').classList.remove('show');void $('result').offsetWidth;$('result').classList.add('show');$('score').classList.add('flash');setTimeout(()=>$('score').classList.remove('flash'),500)},1050)}
-    function connect(){const ws=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/ws`);ws.onmessage=e=>{const msg=JSON.parse(e.data);render(msg.state);if(msg.type==='ball')animate(msg.result)};ws.onclose=()=>setTimeout(connect,1200)}connect();
-    setInterval(()=>{if(!current||current.status!=='voting')return;const left=Math.max(0,Math.ceil((current.openedAt+current.voteWindowMs-Date.now())/1000));$('status').innerHTML=`Vote now · <span class="timer">${left}</span>s`},250);
-  </script>
 </body>
 </html>

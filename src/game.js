@@ -50,17 +50,29 @@ function weightedOutcome(weights, rng) {
   return OUTCOMES.at(-1);
 }
 
+function positiveInteger(value, fallback, name, max = Number.MAX_SAFE_INTEGER) {
+  if (value === undefined || value === '') return fallback;
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number <= 0 || number > max) {
+    throw new RangeError(`${name} must be a positive integer within its supported range`);
+  }
+  return number;
+}
+
 class CricketGame {
   constructor(options = {}) {
     this.rng = options.rng || Math.random;
-    this.voteWindowMs = Number(options.voteWindowMs) || 15000;
-    this.target = Number(options.target) || 36;
-    this.maxOvers = Number(options.maxOvers) || 3;
-    this.maxWickets = Number(options.maxWickets) || 10;
+    this.voteWindowMs = positiveInteger(options.voteWindowMs, 15000, 'VOTE_WINDOW_MS', 2147483647);
+    this.target = positiveInteger(options.target, 36, 'TARGET');
+    this.maxOvers = positiveInteger(options.maxOvers, 3, 'MAX_OVERS', Math.floor(Number.MAX_SAFE_INTEGER / 6));
+    this.initialMaxOvers = this.maxOvers;
+    this.maxWickets = positiveInteger(options.maxWickets, 10, 'maxWickets');
+    this.now = options.now || Date.now;
     this.reset();
   }
 
   reset() {
+    this.maxOvers = this.initialMaxOvers;
     this.score = 0;
     this.wickets = 0;
     this.balls = 0;
@@ -75,7 +87,7 @@ class CricketGame {
     this.freeHitNext = false;
     this.drsUsed = false;
     this.superOver = false;
-    this.openedAt = Date.now();
+    this.openedAt = this.now();
     return this.getState();
   }
 
@@ -148,30 +160,39 @@ class CricketGame {
   openNextBall() {
     if (this.status !== 'resolved') return false;
     this.status = 'voting';
-    this.openedAt = Date.now();
+    this.openedAt = this.now();
     return true;
   }
 
   applyEvent(type, payload = {}) {
+    if (type === 'channelPointRedeem') {
+      if (String(payload.title || '').trim().toUpperCase() !== 'DRS') {
+        return { applied: false, reason: 'Only the DRS reward changes this match' };
+      }
+      return this.applyDRS();
+    }
+    if (this.status === 'won' || this.status === 'lost') {
+      return { applied: false, reason: 'Innings over. Reset to play again' };
+    }
     if (type === 'cheer' || type === 'bits') {
+      if (this.freeHitNext) return { applied: false, reason: 'Free Hit already armed' };
       this.freeHitNext = true;
       this.commentary = `Free Hit armed${payload.user ? ` by ${payload.user}` : ''}! Next ball cannot be a wicket.`;
       return { applied: true, type: 'freeHit' };
     }
     if (type === 'raid') {
+      if (this.superOver) return { applied: false, reason: 'Super Over already active' };
       this.superOver = true;
       this.ballLimit = this.balls + 6;
       this.maxOvers = Math.ceil(this.ballLimit / 6);
-      this.commentary = `RAID! ${payload.viewers || 'A squad of'} fans trigger Super Over mode—six balls of chaos!`;
+      this.commentary = 'RAID! The incoming squad triggers Super Over mode—six balls of chaos!';
       return { applied: true, type: 'superOver' };
     }
-    if (type === 'channelPointRedeem' && String(payload.title || 'DRS').toUpperCase() === 'DRS') {
-      return this.applyDRS();
-    }
-    return { applied: false };
+    return { applied: false, reason: 'Unknown event' };
   }
 
   applyDRS() {
+    if (this.status === 'won') return { applied: false, reason: 'Chase already won' };
     if (this.drsUsed || !this.lastWicket || this.lastWicket.overturned) {
       return { applied: false, reason: this.drsUsed ? 'DRS already used' : 'No wicket to review' };
     }
@@ -197,6 +218,14 @@ class CricketGame {
       score: this.score, wickets: this.wickets, balls: this.balls,
       overs: `${Math.floor(this.balls / 6)}.${this.balls % 6}`,
       target: this.target, maxOvers: this.maxOvers, ballLimit: this.ballLimit, status: this.status,
+      runsNeeded: Math.max(0, this.target - this.score),
+      ballsRemaining: Math.max(0, this.ballLimit - this.balls),
+      wicketsRemaining: Math.max(0, this.maxWickets - this.wickets),
+      canReview: !this.drsUsed && Boolean(this.lastWicket && !this.lastWicket.overturned) && this.status !== 'won',
+      recentBalls: this.history.slice(-6).map(result => ({
+        ball: result.ball, outcome: result.outcome, overturned: Boolean(result.overturned),
+        freeHitSaved: result.freeHitSaved, shot: result.shot, delivery: result.delivery
+      })),
       voteWindowMs: this.voteWindowMs, openedAt: this.openedAt,
       tally, totalVotes: Object.values(tally).reduce((a, b) => a + b, 0),
       lastResult: this.lastResult, commentary: this.commentary,

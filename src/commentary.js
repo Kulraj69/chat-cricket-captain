@@ -37,7 +37,7 @@ const LINES = {
   ],
   DRS_YES: [
     'DRS magic! Decision overturned. Not out—chat had the receipts!',
-    'UltraEdge says bach gaya! The wicket is erased.'
+    'Replay says bach gaya! The wicket is erased.'
   ],
   DRS_NO: [
     'Umpire’s call. DRS lost and the finger stays up.',
