@@ -29,6 +29,8 @@ async function readBody(request) {
 
 function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {}) {
   const sockets = new Set();
+  // PUBLIC_READONLY=1 exposes only the overlay (no control room, no POST actions) for safe tunnelling/hosting.
+  const readOnly = env.PUBLIC_READONLY === '1';
   const liveConfigured = env.MOCK_MODE !== '1' && Boolean(env.TWITCH_CHANNEL && env.TWITCH_BOT_USERNAME && env.TWITCH_OAUTH_TOKEN);
   let twitchStatus = liveConfigured ? 'Connecting to Twitch' : 'Mock mode · simulated events';
   const state = () => ({ ...match.getState(), twitchStatus, mode: liveConfigured ? 'twitch' : 'mock' });
@@ -51,6 +53,9 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
   const server = http.createServer(async (request, response) => {
     try {
       const url = new URL(request.url, 'http://localhost');
+      if (readOnly && (request.method !== 'GET' || url.pathname === '/' || url.pathname === '/mock')) {
+        return json(response, 403, { ok: false, error: 'Read-only: only /overlay is public' });
+      }
       if (request.method === 'GET' && url.pathname === '/api/state') return json(response, 200, state());
       if (request.method === 'POST' && url.pathname.startsWith('/api/')) {
         // The control room is a local operator surface, not a public Twitch extension.

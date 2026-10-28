@@ -81,6 +81,8 @@ class TwitchBridge {
   }
 
   connectEventSub(url = 'wss://eventsub.wss.twitch.tv/ws') {
+    // A reconnect timer may already be queued when the operator stops.
+    if (this.intentionalClose) return;
     this.eventSocket = new WebSocket(url);
     this.eventSocket.on('message', async raw => {
       try {

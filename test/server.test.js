@@ -124,3 +124,11 @@ test('Twitch startup failures provide a safe status and leave local controls usa
   assert.equal(JSON.stringify(state).includes('private-upstream-test-marker'), false);
   assert.equal((await post('/api/message', { user: 'tester', message: '!six' })).body.ok, true);
 });
+
+test('PUBLIC_READONLY serves only the overlay and rejects control actions', async t => {
+  const { base, post } = await start(t, { env: { MOCK_MODE: '1', PUBLIC_READONLY: '1' } });
+  assert.equal((await fetch(base + '/overlay')).status, 200);
+  assert.equal((await fetch(base + '/api/state')).status, 200);
+  assert.equal((await fetch(base + '/mock')).status, 403);
+  assert.equal((await post('/api/reset')).status, 403);
+});

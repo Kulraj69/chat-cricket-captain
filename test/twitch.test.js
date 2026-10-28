@@ -4,6 +4,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { TwitchBridge } = require('../src/twitch');
 
+test('a queued EventSub reconnect cannot reopen a stopped bridge', async () => {
+  const bridge = new TwitchBridge({ env: {} });
+  await bridge.stop();
+  // Invalid URL proves the stopped path returns before constructing a socket.
+  assert.doesNotThrow(() => bridge.connectEventSub('not-a-websocket-url'));
+  assert.equal(bridge.eventSocket, null);
+});
+
 test('EventSub payloads map to the same commands used in mock mode', () => {
   const events = [];
   const bridge = new TwitchBridge({ env: {}, onMessage: () => {}, onEvent: (type, payload) => events.push({ type, payload }) });
