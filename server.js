@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { WebSocketServer, WebSocket } = require('ws');
 const { MatchController } = require('./src/match');
-const { TwitchBridge } = require('./src/twitch');
+const { TwitchBridge, isAnonymous } = require('./src/twitch');
 
 const publicDir = path.join(__dirname, 'public');
 const routes = { '/': 'mock.html', '/mock': 'mock.html', '/overlay': 'overlay.html' };
@@ -44,7 +44,7 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
   const sockets = new Set();
   // PUBLIC_READONLY disables HTTP controls; overlay state, including names, remains readable.
   const readOnly = env.PUBLIC_READONLY === '1';
-  const liveConfigured = env.MOCK_MODE !== '1' && Boolean(env.TWITCH_CHANNEL && env.TWITCH_BOT_USERNAME && env.TWITCH_OAUTH_TOKEN);
+  const liveConfigured = env.MOCK_MODE !== '1' && (isAnonymous(env) || Boolean(env.TWITCH_CHANNEL && env.TWITCH_BOT_USERNAME && env.TWITCH_OAUTH_TOKEN));
   let twitchStatus = liveConfigured ? 'Connecting to Twitch' : 'Mock mode · simulated events';
   const state = () => ({ ...match.getState(), twitchStatus, mode: liveConfigured ? 'twitch' : 'mock' });
   function broadcast(packet = { type: 'state' }) {
@@ -60,7 +60,7 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
   const twitch = (bridgeFactory || (callbacks => new TwitchBridge({ ...callbacks, env })))({
     onMessage: (user, message) => match.receiveMessage(user, message),
     onEvent: (type, payload) => match.receiveEvent(type, payload),
-    onStatus: message => { twitchStatus = message; broadcast(); }
+    onStatus: message => { twitchStatus = message; if (liveConfigured) console.log(`[twitch] ${message}`); broadcast(); }
   });
 
   const server = http.createServer(async (request, response) => {
@@ -132,6 +132,7 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
         server.listen(port, host, () => { server.removeListener('error', reject); resolve(); });
       });
       match.start();
+      if (liveConfigured && isAnonymous(env)) console.log(`Running in read-only anonymous mode (no chat posting, no EventSub) for #${env.TWITCH_CHANNEL}`);
       if (liveConfigured) void twitch.start().catch(() => {
         twitchStatus = 'Twitch unavailable. Check credentials and network'; broadcast();
       });

@@ -10,6 +10,11 @@ function cleanToken(value = '') {
   return value.replace(/^oauth:/, '');
 }
 
+// Anonymous read-only mode: channel set and either TWITCH_ANON=1 or no OAuth token.
+function isAnonymous(env = process.env) {
+  return Boolean(env.TWITCH_CHANNEL) && (env.TWITCH_ANON === '1' || !env.TWITCH_OAUTH_TOKEN);
+}
+
 class TwitchBridge {
   constructor({ onMessage, onEvent, onStatus = () => {}, env = process.env,
     socketFactory = url => new WebSocket(url), setTimer = setTimeout, clearTimer = clearTimeout,
@@ -32,12 +37,16 @@ class TwitchBridge {
     this.notificationIds = new Map();
   }
 
+  get anonymous() {
+    return isAnonymous(this.env);
+  }
+
   get chatConfigured() {
-    return Boolean(this.channel && this.env.TWITCH_BOT_USERNAME && this.env.TWITCH_OAUTH_TOKEN);
+    return this.anonymous || Boolean(this.channel && this.env.TWITCH_BOT_USERNAME && this.env.TWITCH_OAUTH_TOKEN);
   }
 
   get eventSubConfigured() {
-    return Boolean(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_USER_OAUTH_TOKEN && this.channel);
+    return !this.anonymous && Boolean(this.env.TWITCH_CLIENT_ID && this.env.TWITCH_USER_OAUTH_TOKEN && this.channel);
   }
 
   async start() {
@@ -48,13 +57,15 @@ class TwitchBridge {
     }
     // Choose one authority for powers for this connection lifetime. Switching
     // during an outage can replay a delayed event after a ball or match reset.
+    const anonymous = this.anonymous;
     const useEventSub = this.eventSubConfigured;
+    // No identity makes tmi.js join as an anonymous justinfan user (read-only).
     this.chat = new tmi.Client({
       options: { debug: false },
-      identity: {
+      ...(anonymous ? {} : { identity: {
         username: this.env.TWITCH_BOT_USERNAME,
         password: this.env.TWITCH_OAUTH_TOKEN
-      },
+      } }),
       channels: [this.channel]
     });
     // tmi's queued reconnect calls this method even after disconnect().
@@ -76,13 +87,15 @@ class TwitchBridge {
       await this.stopChat();
       return false;
     }
-    this.onStatus(`Connected to #${this.channel}`);
+    this.onStatus(anonymous
+      ? `Connected to #${this.channel} (read-only anonymous mode; chat posting and EventSub disabled)`
+      : `Connected to #${this.channel}`);
     if (useEventSub) this.connectEventSub();
     return true;
   }
 
   async announce(text) {
-    if (this.intentionalClose || !this.chat || !text) return;
+    if (this.intentionalClose || !this.chat || !text || this.anonymous) return;
     try { await this.chat.say(this.channel, text); } catch (error) {
       if (!this.intentionalClose) this.onStatus('Chat announce failed; check connection and bot permissions');
     }
@@ -272,4 +285,4 @@ class TwitchBridge {
   }
 }
 
-module.exports = { TwitchBridge };
+module.exports = { TwitchBridge, isAnonymous };
