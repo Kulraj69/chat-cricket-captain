@@ -39,6 +39,7 @@ function drawClock() {
   $('timer').parentElement.classList.toggle('urgent', current.status === 'voting' && clock.seconds <= 3);
 }
 
+let endTimer;
 function drawEnd() {
   const ended = current && ['won', 'lost'].includes(current.status);
   $('end').hidden = !ended || revealing;
@@ -93,7 +94,15 @@ function render(state) {
     row.append(element('span', 'rank', String(i + 1)), element('span', 'name', player.user), element('span', 'credit', String(player.runs)));
     return row;
   }) : [element('li', 'mvp-empty', ended ? 'No voter credit this innings.' : 'Your name belongs here. Vote for a shot to join the chase.')]));
+  if (state.status === 'won') {
+    $('ballNumber').textContent = 'TARGET REACHED · FULL TIME';
+    $('ballStatus').textContent = 'CHAT WINS THE CHASE.';
+    $('voteLabel').textContent = 'CHAT WINS THE CHASE';
+    $('voteNote').textContent = `${state.score}/${state.wickets} · target ${state.target}`;
+    $('commentary').textContent = `CHAT WINS THE CHASE! ${state.score}/${state.wickets}, target ${state.target}.`;
+  }
   drawClock(); drawEnd();
+  if (ended) { clearTimeout(endTimer); endTimer = setTimeout(() => { if (!revealing) drawEnd(); else setTimeout(drawEnd, 3200); }, 3200); }
 }
 
 function clearReveal() {

@@ -25,3 +25,5 @@
 .target-reached{display:none;font:900 44px/1.2 var(--display)!important;color:var(--lime);margin-top:9px}
 body.won .equation>div:not(.chase-track){display:none!important}body.won .target-reached{display:block}
 body.won #voteHeading,body.won #timer,body.won #raidLabel,body.won #freeLabel,body.won #drsLabel{visibility:hidden}
+
+body.won .powers,body.won .vote-clock,body.won .clock-track,body.won #voteHeading{display:none!important}
