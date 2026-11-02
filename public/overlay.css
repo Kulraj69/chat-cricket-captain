@@ -14,3 +14,14 @@
 @keyframes bowl{0%{opacity:1;top:13%;transform:scale(.6)}75%{opacity:1;top:76%;transform:scale(1)}100%{opacity:0;top:5%;transform:translateX(170px) scale(.4)}}@keyframes swing{50%{transform:rotate(-65deg)}}@keyframes reveal{0%{opacity:0;transform:scale(.8)}10%,85%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.03)}}
 .panel-note{font-size:14px;color:var(--cream)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}.ball.go,.bat.hit{animation:none}.moment.show{animation:none;opacity:1;transform:none}}
+
+/* readability pass */
+.brand .eyebrow,.panel-head>span,.power>span,.recent>.eyebrow,footer,.ticker-tag,.broadcast-meta{font-size:15px;font-weight:700}
+.vote small{font-size:15px;font-weight:700;color:#c9d9d2}.vote-row>span{color:#dfe9e4;font-weight:700}
+.track{height:10px;background:#ffffff26}.fill{background:#3fb8ff}.winner .fill{background:var(--lime);box-shadow:0 0 8px #d8fa62aa}
+.panel-note{color:#c9d9d2}
+.ball-heading h2,.ball-heading>.eyebrow{text-shadow:0 2px 4px #000,0 0 18px #000,0 0 30px #000c}
+.end{inset:200px 70px 150px;padding:22px 18px;background:rgba(7,25,21,.72)}.end h2{font-size:52px;margin:12px 0 8px}.end p{font-size:17px;margin:8px 0 12px}
+.target-reached{display:none;font:900 44px/1.2 var(--display)!important;color:var(--lime);margin-top:9px}
+body.won .equation>div:not(.chase-track){display:none!important}body.won .target-reached{display:block}
+body.won #voteHeading,body.won #timer,body.won #raidLabel,body.won #freeLabel,body.won #drsLabel{visibility:hidden}

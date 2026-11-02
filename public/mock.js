@@ -61,7 +61,7 @@ function render(state) {
   $('demo').textContent = state.demo ? '↻ Replay the showcase' : '▶ Play the showcase';
   const prompts = CricketUI.matchPrompts(state);
   $('cue').textContent = prompts.cue;
-  $('drsHint').textContent = prompts.drs;
+  $('drsHint').textContent = !state.canReview ? (state.drsUsed ? 'Disabled: review already used' : 'Disabled: only after a wicket') : prompts.drs;
   $('mode').textContent = state.demo ? 'SCRIPTED MOCK SHOWCASE' : state.mode === 'mock' ? 'MOCK CONTROL ROOM' : 'TWITCH CONTROL ROOM';
   controls();
 }

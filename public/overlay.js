@@ -56,6 +56,7 @@ function render(state) {
   $('mode').textContent = state.demo ? 'SCRIPTED MOCK SHOWCASE · SIMULATED VOTERS & EVENTS' : state.mode === 'mock' ? 'MOCK MATCH · SIMULATED CHAT & EVENTS' : `TWITCH · ${state.twitchStatus}`;
   const prompts = matchPrompts(state);
   const ended = ['won', 'lost'].includes(state.status);
+  document.body.classList.toggle('won', state.status === 'won');
   $('voteHeading').textContent = ended ? 'FINAL TALLY' : state.status === 'voting' ? 'MAKE THE CALL' : 'DELIVERY TALLY';
   $('footerAction').textContent = ended ? 'INNINGS COMPLETE' : 'TYPE A SHOT → CHAT PICKS → THE BALL PLAYS OUT';
   $('footerNote').textContent = ended ? (state.canReview ? 'Review the wicket or reset from the control room.' : 'Reset from the control room to play again.') : '!drive · !pull · !sweep · !defend · !six';
