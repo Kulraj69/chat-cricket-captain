@@ -16,6 +16,39 @@
     return { tally, total, locked, winner: locked ? state.lastResult.shot : null };
   }
 
+  function voteCopy(state) {
+    const votes = voteDisplay(state);
+    if (!votes.locked) return { label: 'VOTE IN CHAT', note: 'One vote each. Change your mind anytime.' };
+    if (!votes.total) return { label: 'NO VOTES · !DEFEND', note: 'No votes arrived. The default shot is defend.' };
+    const maximum = Math.max(...Object.values(votes.tally));
+    const tied = Object.values(votes.tally).filter(n => n === maximum).length > 1;
+    return {
+      label: `${tied ? 'TIE ·' : 'CHAT CHOSE'} !${votes.winner.toUpperCase()}`,
+      note: tied ? 'Random pick among tied shots.' : 'Most votes selected this shot.'
+    };
+  }
+
+  function matchPrompts(state) {
+    const ended = ['won', 'lost'].includes(state.status);
+    let cue;
+    if (ended) {
+      cue = state.demo ? 'Showcase complete. Replay the showcase or choose Reset to manual play.'
+        : `${state.canReview ? 'Redeem DRS to review the wicket, or choose' : 'Innings over. Choose'} Reset to manual play for a new match.`;
+    } else {
+      cue = state.demo?.cue || (state.mode === 'twitch'
+        ? 'Twitch configured. Use MOCK_MODE=1 to rehearse the scripted showcase.'
+        : state.status === 'voting' ? 'Send a shot, then watch it play out.' : 'Delivery resolving. Wait for the next voting window.');
+    }
+    return {
+      cue,
+      chase: ended ? (state.status === 'won' ? 'CHASE COMPLETE' : 'INNINGS OVER')
+        : state.ballsRemaining === 1 ? 'LAST BALL. MAKE IT COUNT.' : 'THE CHASE',
+      raid: ended ? 'INNINGS OVER' : state.superOver ? `SUPER OVER · ${state.ballsRemaining} balls left` : 'Trigger a Super Over',
+      cheer: ended ? 'INNINGS OVER' : state.freeHitNext ? 'FREE HIT ARMED' : state.lastResult?.freeHitSaved ? 'WICKET SAVED' : 'Protect the next wicket',
+      drs: state.drsUsed ? 'REVIEW USED' : state.canReview ? 'WICKET AVAILABLE TO REVIEW' : ended ? 'NO REVIEW AVAILABLE' : 'Review a wicket'
+    };
+  }
+
   function countdown(state, now) {
     if (state.status !== 'voting') return { seconds: 0, fraction: 0 };
     const remaining = Math.max(0, Math.min(state.voteWindowMs, state.openedAt + state.voteWindowMs - now));
@@ -48,7 +81,7 @@
     window.addEventListener('pagehide', () => { clearTimeout(retry); socket.onclose = null; socket.close(); }, { once: true });
   }
 
-  const api = { SHOTS, voteDisplay, countdown, resultPresentation, connect };
+  const api = { SHOTS, voteDisplay, voteCopy, matchPrompts, countdown, resultPresentation, connect };
   if (typeof module !== 'undefined') module.exports = api;
   else root.CricketUI = api;
 })(typeof window === 'undefined' ? globalThis : window);

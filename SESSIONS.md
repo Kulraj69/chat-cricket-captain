@@ -1,5 +1,7 @@
 # Codex sessions
 
+Historical record, not independently authenticated by the October 28 Hermes handoff. Session IDs, contribution attributions and the token count below are retained from earlier notes, not newly verified facts. Review original conversations before using them as contest evidence. Hermes continuation work is not a Codex session.
+
 | Date (IST) | Session ID | Purpose | Tokens |
 |---|---|---|---|
 | 2026-10-27 | 01a17995-b816-76d3-9463-0d48a4971357 | Built full MVP from SPEC.md (engine, overlay, mock chat, Twitch IRC/EventSub, tests, README) | 53,296 |
@@ -13,7 +15,7 @@
 - Separated match scheduling from server startup, repaired DRS resumption after an all-out wicket, guarded repeated powers and ended innings, and exposed chase/history state for reconnecting viewers. Added forced mock mode and safe request/upstream-error handling.
 - Rebuilt the transparent overlay and control room with local assets, an embedded preview, shot guidance, vote countdown, retained winning tally, recent-ball history, review/Free Hit reveals, MVP credit, and a final-delivery reveal before the result card.
 - Expanded README onboarding, configuration, OBS setup, architecture, and the concrete Codex development story. Added `DEMO.md` with a proposed video script and the real Twitch/OBS/Codex proof still required. Removed unsupported finalist-odds estimates from the brainstorming document.
-- Verification: `npm install` completed; `npm test` passed with 35 tests at the recorded run. The optional `npm run test:browser` passed in installed Chrome, checking desktop/mobile controls, literal username rendering, the showcase, the final reveal, reload, transparency, and smaller overlay dimensions. Screenshots were generated locally. No live Twitch credentials, actual OBS capture, public video upload, or Devpost submission were verified or performed.
+- Verification: `npm install` completed; `npm test` passed with 35 tests at the recorded session run (historical count; the current suite has 89 tests, verified 2026-10-31 — see README "Verification and troubleshooting"). The optional `npm run test:browser` passed in installed Chrome, checking desktop/mobile controls, literal username rendering, the showcase, the final reveal, reload, transparency, and smaller overlay dimensions. Screenshots were generated locally. No live Twitch credentials, actual OBS capture, public video upload, or Devpost submission were verified or performed.
 - This session ID was read from `CODEX_THREAD_ID`. Token usage was not available and is not estimated. Game fixture values and test results are not audience or engagement statistics.
 
 ## 2026-10-27 — Codex (gpt-6-astra), verification and finishing pass
@@ -24,5 +26,5 @@ Thread: `01a17a59-df83-7c10-b75d-8fd86d376777`, read from this session's environ
 - Added deterministic end-to-end showcase/replay and interruption tests, DRS resumption checks, input/configuration validation, event guards, presentation checks, real local HTTP/WebSocket tests, and credential-free Twitch adapter fixtures. Prevented repeated controller startup from scheduling duplicate deliveries.
 - Inspected the app in local Chrome. Fixed system-font overflow that obscured the mock label, strengthened broadcast typography, and made the control room display the current overlay URL. Added an actual, explicitly labeled showcase screenshot to README.md and clarified the Codex contribution.
 - Kept the example environment in forced mock mode so copied placeholders cannot accidentally activate Twitch. Removed a third-party replay-product name from commentary. Reviewed DEMO.md's distinction between rehearsal footage and required real Twitch/OBS proof.
-- Validation: dependency installation completed; `npm test` passed all 35 tests; `npm run test:browser` passed. Browser checks covered desktop/mobile controls, literal username rendering, DRS reveal, last-ball win, final-delivery-before-end-card timing, reload state, transparency, and smaller overlay sizing. `git diff --check` passed.
+- Validation: dependency installation completed; `npm test` passed all 35 tests at that historical session run (the current suite has 89 tests, verified 2026-10-31); `npm run test:browser` passed. Browser checks covered desktop/mobile controls, literal username rendering, DRS reveal, last-ball win, final-delivery-before-end-card timing, reload state, transparency, and smaller overlay sizing. `git diff --check` passed.
 - No Twitch credentials were used, no live Twitch/OBS recording or submission was performed, and no audience/engagement results are claimed.

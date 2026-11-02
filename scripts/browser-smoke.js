@@ -73,6 +73,8 @@ async function run() {
     await screenshot('control-room');
     // Confirm that user names remain literal text, even when they contain HTML syntax.
     await evaluate('document.getElementById("reset").click()');
+    await until('document.getElementById("connection")?.textContent === "● SCOREBOARD CONNECTED"');
+    await until('(async () => { const state = await (await fetch("/api/state")).json(); return state.status === "voting" && !state.demo; })()');
     await until('!document.getElementById("send").disabled');
     await evaluate('document.getElementById("user").value = "<img src=x>"; document.getElementById("send").click()');
     await until('document.getElementById("feedback").textContent.includes("accepted")');
@@ -111,6 +113,80 @@ async function run() {
     assert.equal(await evaluate('getComputedStyle(document.body).backgroundColor'), 'rgba(0, 0, 0, 0)');
     await cdp('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
     await screenshot('overlay-720p');
+    // Synthetic clock/RNG, real controller, localhost packets and browser DOM.
+    await cdp('Page.navigate', { url: base + '/mock' });
+    // Wait for the socket to actually connect before driving the control room.
+    // The reset button is enabled in the static HTML, so checking `!disabled` alone
+    // can pass while the page is still offline and the button is briefly disabled.
+    await until('document.getElementById("connection")?.textContent === "● SCOREBOARD CONNECTED"');
+    await until('document.getElementById("reset") && !document.getElementById("reset").disabled');
+    const overlay = 'document.querySelector("iframe").contentDocument';
+    let manualCalls = 0;
+    async function manual(options, votes = []) {
+      manualCalls += 1;
+      app.match.gameOptions = { ...app.match.gameOptions, ...options };
+      const previous = app.match.game;
+      const beforeDisabled = await evaluate('document.getElementById("reset").disabled');
+      await evaluate('(() => { window.__rc = 0; document.getElementById("reset").addEventListener("click", () => { window.__rc += 1; }); return true; })()');
+      await evaluate('document.getElementById("reset").click()');
+      for (let i = 0; i < 100 && app.match.game === previous; i += 1) await pause(50);
+      if (app.match.game === previous) {
+        const diag = await evaluate('({disabled: document.getElementById("reset").disabled, rc: window.__rc, feedback: document.getElementById("feedback").textContent})');
+        console.error(`manual call ${manualCalls} reset no-op: beforeDisabled=${beforeDisabled} after=${JSON.stringify(diag)}`);
+      }
+      assert.notEqual(app.match.game, previous, 'reset must finish before advancing the fake clock');
+      await until('!document.getElementById("send").disabled');
+      for (const [user, shot] of votes) assert.ok(app.match.receiveMessage(user, shot).accepted);
+      clock.advance(app.match.game.voteWindowMs);
+      await until('document.getElementById("send").disabled');
+    }
+    await manual({ maxOvers: 1, maxWickets: 10, target: 100, rng: () => 0 });
+    await until(`${overlay}.getElementById('voteLabel').textContent === 'NO VOTES · !DEFEND'`);
+    assert.equal(await evaluate(`${overlay}.getElementById('ballStatus').textContent`), 'NO VOTES. DEFAULT DEFEND.');
+    await manual({ rng: () => 0.7 }, [['a', '!drive'], ['b', '!six']]);
+    await until(`${overlay}.getElementById('voteLabel').textContent.startsWith('TIE ·')`);
+    assert.match(await evaluate(`${overlay}.getElementById('voteNote').textContent`), /Random/);
+    await manual({ target: 1 }, [['a', '!six'], ['b', '!six']]);
+    await until('document.getElementById("cue").textContent.includes("Innings over")');
+    for (const id of ['raid', 'cheer', 'send']) assert.equal(await evaluate(`document.getElementById('${id}').disabled`), true);
+    assert.equal(await evaluate(`${overlay}.getElementById('voteHeading').textContent`), 'FINAL TALLY');
+    assert.equal(await evaluate(`${overlay}.getElementById('raidLabel').textContent`), 'INNINGS OVER');
+    assert.match(await evaluate(`${overlay}.getElementById('footerNote').textContent`), /Reset/);
+    assert.equal(app.match.game.score, 6);
+    assert.deepEqual(app.match.game.getState().mvp.map(p => p.runs), [6, 6]);
+    assert.deepEqual(await evaluate(`Array.from(${overlay}.querySelectorAll('#mvp .credit'), el => el.textContent)`), ['6', '6']);
+    assert.match(await evaluate(`${overlay}.getElementById('endMvp').textContent`), /6 credited runs/);
+    assert.match(await evaluate(`${overlay}.body.textContent`), /Each winning voter gets full run credit. Team runs count once./);
+    await manual({ target: 1, rng: () => 0.7 });
+    await until(`${overlay}.getElementById('endTitle').textContent === 'CHASE COMPLETE'`);
+    assert.equal(app.match.game.status, 'won');
+    assert.match(await evaluate(`${overlay}.getElementById('commentary').textContent`), /No votes arrived/);
+    assert.equal(await evaluate(`${overlay}.getElementById('endMvp').textContent`), 'No voter credit this innings. Play again from the control room.');
+    await manual({ target: 100, maxWickets: 1, rng: () => 0.999 }, [['a', '!six']]);
+    await until('document.getElementById("cue").textContent.includes("Redeem DRS")');
+    assert.equal(app.match.game.status, 'lost');
+    assert.equal(await evaluate('document.getElementById("drs").disabled'), false);
+    assert.equal(await evaluate(`${overlay}.getElementById('chaseLabel').textContent`), 'INNINGS OVER');
+    app.match.game.rng = () => 0;
+    await evaluate('document.getElementById("drs").click()');
+    await until('document.getElementById("drsHint").textContent === "REVIEW USED"');
+    clock.advance(app.match.revealMs);
+    await until('!document.getElementById("send").disabled');
+    assert.equal(await evaluate(`${overlay}.getElementById('voteHeading').textContent`), 'MAKE THE CALL');
+    assert.match(await evaluate('document.getElementById("cue").textContent'), /Send a shot/);
+    // Exhaust remaining balls without votes. There can be no additional DRS.
+    for (let i = 0; i < 5; i += 1) clock.advance(app.match.game.voteWindowMs + app.match.revealMs);
+    await until('document.getElementById("cue").textContent.includes("Innings over")');
+    assert.equal(app.match.game.status, 'lost');
+    assert.equal(app.match.game.getState().ballsRemaining, 0);
+    assert.equal(await evaluate('document.getElementById("drs").disabled'), true);
+    assert.match(await evaluate(`${overlay}.getElementById('mvp').textContent`), /a/);
+    await manual({ maxWickets: 10, rng: () => 0 });
+    for (let i = 0; i < 5; i += 1) clock.advance(app.match.revealMs + app.match.game.voteWindowMs);
+    await until('document.getElementById("cue").textContent.includes("Innings over")');
+    assert.doesNotMatch(await evaluate(`${overlay}.getElementById('mvp').textContent`), /Vote for a shot/);
+    assert.equal(await evaluate(`${overlay}.getElementById('endKicker').textContent`), 'INNINGS COMPLETE');
+    console.log('Presentation DOM cases passed: no votes, tie, rendered full credit, manual win, no-voter win, all-out loss, DRS resume, exhausted loss, no-voter loss.');
     assert.deepEqual(errors, [], 'no uncaught browser exceptions');
     console.log(`Browser smoke check passed. Screenshots: ${output}`);
   } finally {

@@ -1,0 +1,32 @@
+[
+  {
+    "command": [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-i",
+      "chat-cricket-mock.mp4",
+      "-f",
+      "null",
+      "-"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "ffprobe",
+      "-v",
+      "error",
+      "-show_entries",
+      "format=duration:stream=codec_name,width,height",
+      "-of",
+      "json",
+      "chat-cricket-mock.mp4"
+    ],
+    "exit": 0,
+    "stdout": "{\n    \"programs\": [\n\n    ],\n    \"stream_groups\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"h264\",\n            \"width\": 1920,\n            \"height\": 1144\n        }\n    ],\n    \"format\": {\n        \"duration\": \"64.400000\"\n    }\n}\n",
+    "stderr": ""
+  }
+]

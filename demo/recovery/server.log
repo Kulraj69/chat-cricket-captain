@@ -1,0 +1,5 @@
+
+> chat-cricket-captain@1.0.0 start
+> node server.js
+
+Chat Cricket Captain: http://localhost:41734/mock

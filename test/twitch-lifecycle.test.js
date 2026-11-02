@@ -15,7 +15,8 @@ function fixture() {
       const socket = new EventEmitter();
       socket.url = url; socket.closed = false;
       socket.close = socket.terminate = () => { socket.closed = true; socket.emit('close'); };
-      socket.packet = (kind, payload = {}) => socket.emit('message', Buffer.from(JSON.stringify({ metadata: { message_type: kind }, payload })));
+      let messageId = 0;
+      socket.packet = (kind, payload = {}) => socket.emit('message', Buffer.from(JSON.stringify({ metadata: { message_type: kind, message_id: `fixture-${++messageId}` }, payload })));
       sockets.push(socket);
       return socket;
     }

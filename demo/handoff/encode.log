@@ -1,0 +1,56 @@
+ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with gcc 14 (Debian 14.2.0-19)
+  configuration: --prefix=/usr --extra-version=0+deb13u1 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-libmfx --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.103 / 61.  7.103
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  5.100 / 10.  5.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Input #0, matroska,webm, from '/workspace/devpost/twitchcon/demo/handoff/chat-cricket-mock.webm':
+  Metadata:
+    creation_time   : 2026-10-28T17:19:35.460000Z
+    ENCODER         : Lavf61.1.100
+  Duration: 00:01:04.56, start: 0.000000, bitrate: 1518 kb/s
+  Stream #0:0(eng): Video: vp9 (Profile 0), yuv420p(tv, progressive), 1920x1080, SAR 1:1 DAR 16:9, 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        ENCODER         : Lavc61.3.100 libvpx-vp9
+        DURATION        : 00:01:04.560000000
+Stream mapping:
+  Stream #0:0 -> #0:0 (vp9 (native) -> h264 (libx264))
+Press [q] to stop, [?] for help
+[libx264 @ 0x55ddf0a2e280] using SAR=1/1
+[libx264 @ 0x55ddf0a2e280] using cpu capabilities: MMX2 SSE2Fast SSSE3 SSE4.2 AVX FMA3 BMI2 AVX2 AVX512
+[libx264 @ 0x55ddf0a2e280] profile High, level 4.2, 4:2:0, 8-bit
+[libx264 @ 0x55ddf0a2e280] 264 - core 164 r3108 31e19f9 - H.264/MPEG-4 AVC codec - Copyleft 2003-2023 - http://www.videolan.org/x264.html - options: cabac=1 ref=2 deblock=1:0:0 analyse=0x3:0x113 me=hex subme=6 psy=1 psy_rd=1.00:0.00 mixed_ref=1 me_range=16 chroma_me=1 trellis=1 8x8dct=1 cqm=0 deadzone=21,11 fast_pskip=1 chroma_qp_offset=-2 threads=12 lookahead_threads=2 sliced_threads=0 nr=0 decimate=1 interlaced=0 bluray_compat=0 constrained_intra=0 bframes=3 b_pyramid=2 b_adapt=1 b_bias=0 direct=1 weightb=1 open_gop=0 weightp=1 keyint=250 keyint_min=25 scenecut=40 intra_refresh=0 rc_lookahead=30 rc=crf mbtree=1 crf=22.0 qcomp=0.60 qpmin=0 qpmax=69 qpstep=4 ip_ratio=1.40 aq=1:1.00
+Output #0, mp4, to '/workspace/devpost/twitchcon/demo/handoff/chat-cricket-mock.mp4':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0(eng): Video: h264 (avc1 / 0x31637661), yuv420p(tv, progressive), 1920x1144 [SAR 1:1 DAR 240:143], q=2-31, 25 fps, 12800 tbn (default)
+      Metadata:
+        DURATION        : 00:01:04.560000000
+        encoder         : Lavc61.19.101 libx264
+      Side data:
+        cpb: bitrate max/min/avg: 0/0/0 buffer size: 0 vbv_delay: N/A
+frame=    0 fps=0.0 q=0.0 size=       0KiB time=N/A bitrate=N/A speed=N/A    frame=  130 fps=130 q=27.0 size=     256KiB time=00:00:05.12 bitrate= 409.7kbits/s speed=5.12x    frame=  281 fps=187 q=27.0 size=     256KiB time=00:00:11.16 bitrate= 188.0kbits/s speed=7.43x    frame=  424 fps=212 q=27.0 size=     512KiB time=00:00:16.88 bitrate= 248.5kbits/s speed=8.43x    frame=  561 fps=224 q=27.0 size=     512KiB time=00:00:22.36 bitrate= 187.6kbits/s speed=8.92x    frame=  715 fps=238 q=27.0 size=     768KiB time=00:00:28.52 bitrate= 220.6kbits/s speed=9.49x    frame=  876 fps=250 q=27.0 size=    1024KiB time=00:00:34.96 bitrate= 240.0kbits/s speed=9.97x    frame= 1022 fps=255 q=27.0 size=    1024KiB time=00:00:40.84 bitrate= 205.4kbits/s speed=10.2x    frame= 1173 fps=260 q=27.0 size=    1280KiB time=00:00:46.84 bitrate= 223.9kbits/s speed=10.4x    frame= 1324 fps=264 q=27.0 size=    1280KiB time=00:00:52.88 bitrate= 198.3kbits/s speed=10.6x    frame= 1463 fps=266 q=27.0 size=    1536KiB time=00:00:58.44 bitrate= 215.3kbits/s speed=10.6x    [out#0/mp4 @ 0x55ddf0a69600] video:1767KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 1.115594%
+frame= 1614 fps=271 q=-1.0 Lsize=    1787KiB time=00:01:04.48 bitrate= 227.0kbits/s speed=10.8x    
+[libx264 @ 0x55ddf0a2e280] frame I:8     Avg QP:13.25  size: 96778
+[libx264 @ 0x55ddf0a2e280] frame P:416   Avg QP:16.60  size:  1885
+[libx264 @ 0x55ddf0a2e280] frame B:1190  Avg QP:19.18  size:   211
+[libx264 @ 0x55ddf0a2e280] consecutive B-frames:  1.0%  1.4%  2.2% 95.4%
+[libx264 @ 0x55ddf0a2e280] mb I  I16..4: 46.6% 36.6% 16.8%
+[libx264 @ 0x55ddf0a2e280] mb P  I16..4:  0.6%  0.3%  0.2%  P16..4:  1.7%  0.2%  0.1%  0.0%  0.0%    skip:96.9%
+[libx264 @ 0x55ddf0a2e280] mb B  I16..4:  0.1%  0.0%  0.0%  B16..8:  0.3%  0.0%  0.0%  direct: 0.3%  skip:99.3%  L0:40.4% L1:54.9% BI: 4.7%
+[libx264 @ 0x55ddf0a2e280] 8x8 transform intra:35.7% inter:73.8%
+[libx264 @ 0x55ddf0a2e280] coded y,uvDC,uvAC intra: 21.9% 26.5% 16.4% inter: 0.1% 0.5% 0.1%
+[libx264 @ 0x55ddf0a2e280] i16 v,h,dc,p: 29% 56%  3% 12%
+[libx264 @ 0x55ddf0a2e280] i8 v,h,dc,ddl,ddr,vr,hd,vl,hu: 38% 29% 19%  2%  2%  1%  4%  1%  3%
+[libx264 @ 0x55ddf0a2e280] i4 v,h,dc,ddl,ddr,vr,hd,vl,hu: 31% 32% 14%  3%  4%  4%  5%  3%  4%
+[libx264 @ 0x55ddf0a2e280] i8c dc,h,v,p: 57% 31% 10%  1%
+[libx264 @ 0x55ddf0a2e280] Weighted P-Frames: Y:0.0% UV:0.0%
+[libx264 @ 0x55ddf0a2e280] ref P L0: 79.4% 20.6%
+[libx264 @ 0x55ddf0a2e280] ref B L0: 89.4% 10.6%
+[libx264 @ 0x55ddf0a2e280] ref B L1: 92.9%  7.1%
+[libx264 @ 0x55ddf0a2e280] kb/s:224.13

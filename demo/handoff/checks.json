@@ -1,0 +1,30 @@
+[
+  {
+    "check": "opening six from real engine",
+    "pass": true
+  },
+  {
+    "check": "DRS reversal displayed",
+    "pass": true
+  },
+  {
+    "check": "Free Hit saved delivery",
+    "pass": true
+  },
+  {
+    "check": "six needed from last ball",
+    "pass": true
+  },
+  {
+    "check": "final delivery before win; six balls and fixture MVP credit",
+    "pass": true
+  },
+  {
+    "check": "same user replacement keeps one vote; second browser sees it",
+    "pass": true
+  },
+  {
+    "check": "no external page requests or browser errors; local WebSocket",
+    "pass": true
+  }
+]

@@ -50,6 +50,37 @@ test('HTTP commands update both WebSocket viewers and reconnect supplies the cur
   reconnected.close();
 });
 
+test('HTTP reset retains EventSub identities but permits new powers', async t => {
+  const { TwitchBridge } = require('../src/twitch');
+  const { EventEmitter } = require('node:events');
+  let bridge, socket;
+  const { base, post } = await start(t, { bridgeFactory: callbacks => {
+    bridge = new TwitchBridge({ ...callbacks, env: {}, socketFactory: () => {
+      socket = new EventEmitter();
+      socket.close = socket.terminate = () => socket.emit('close');
+      return socket;
+    } });
+    bridge.subscribeEventSub = async () => {};
+    return bridge;
+  } });
+  const packet = (kind, payload, id) => socket.emit('message', Buffer.from(JSON.stringify({
+    metadata: { message_type: kind, message_id: id }, payload
+  })));
+  const cheer = id => packet('notification', {
+    subscription: { type: 'channel.cheer' }, event: { user_name: 'fixture', bits: 1 }
+  }, id);
+  const freeHit = async () => (await (await fetch(base + '/api/state')).json()).freeHitNext;
+  bridge.connectEventSub();
+  packet('session_welcome', { session: { id: 'fixture', keepalive_timeout_seconds: 10 } });
+  cheer('before-reset');
+  assert.equal(await freeHit(), true);
+  assert.equal((await post('/api/reset')).body.state.freeHitNext, false);
+  cheer('before-reset');
+  assert.equal(await freeHit(), false);
+  cheer('after-reset');
+  assert.equal(await freeHit(), true);
+});
+
 test('all local UI assets load without a build step and private files are not served', async t => {
   const { base } = await start(t);
   for (const [path, type] of [
@@ -70,7 +101,7 @@ test('all local UI assets load without a build step and private files are not se
 test('invalid requests leave the match intact and errors never echo input', async t => {
   const { base, post } = await start(t);
   for (const body of [[], null, 'invalid']) assert.equal((await post('/api/message', body)).status, 400);
-  const invalid = await fetch(base + '/api/message', { method: 'POST', body: '{test-only-marker' });
+  const invalid = await fetch(base + '/api/message', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{test-only-marker' });
   assert.equal(invalid.status, 400);
   assert.equal((await invalid.text()).includes('test-only-marker'), false);
   assert.equal((await post('/api/message', { user: 'a', message: '!six' }, { origin: 'https://unrelated.example' })).status, 403);

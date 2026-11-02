@@ -1,0 +1,43 @@
+{
+  "score": 0,
+  "wickets": 0,
+  "balls": 0,
+  "overs": "0.0",
+  "target": 36,
+  "maxOvers": 3,
+  "ballLimit": 18,
+  "status": "voting",
+  "runsNeeded": 36,
+  "ballsRemaining": 18,
+  "wicketsRemaining": 10,
+  "canReview": false,
+  "recentBalls": [],
+  "voteWindowMs": 60000,
+  "openedAt": 1793382264806,
+  "tally": {
+    "drive": 0,
+    "pull": 0,
+    "sweep": 0,
+    "defend": 0,
+    "six": 1
+  },
+  "totalVotes": 1,
+  "lastResult": null,
+  "commentary": "New chase, fresh pitch. Chat, choose your shot!",
+  "freeHitNext": false,
+  "drsUsed": false,
+  "superOver": false,
+  "mvp": [
+    {
+      "user": "local_tester",
+      "votes": 1,
+      "runs": 0,
+      "winningVotes": 0
+    }
+  ],
+  "demo": null,
+  "lastEvent": null,
+  "serverNow": 1793382264991,
+  "twitchStatus": "Mock mode \u00b7 simulated events",
+  "mode": "mock"
+}

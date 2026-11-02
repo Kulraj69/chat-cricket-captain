@@ -52,6 +52,13 @@ function pick(items, rng) {
 function commentaryFor(result, rng = Math.random) {
   let key = result.freeHitSaved ? 'FREE_HIT' : result.outcome;
   const template = pick(LINES[key] || LINES[0], rng);
+  // Keep the RNG draw above: commentary shares the authored game sequence.
+  if (result.tally && Object.values(result.tally).every(votes => votes === 0)) {
+    const outcome = result.freeHitSaved ? 'Free Hit saved the wicket.'
+      : result.outcome === 'W' ? 'Wicket.'
+      : `${result.outcome} run${result.outcome === 1 ? '' : 's'}.`;
+    return `No votes arrived. Default defend: ${outcome}`;
+  }
   return template
     .replaceAll('{shot}', result.shot || 'shot')
     .replaceAll('{delivery}', result.delivery || 'delivery');

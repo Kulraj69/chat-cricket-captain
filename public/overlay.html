@@ -18,7 +18,7 @@
     <div class="broadcast-meta"><span id="mode">CONNECTING</span><span id="connection" class="offline">● CONNECTING TO SCOREBOARD</span></div>
     <main class="stage">
       <section class="panel vote-panel">
-        <div class="panel-head"><h2>MAKE THE CALL</h2><span id="voteCount">0 VOTES</span></div>
+        <div class="panel-head"><h2 id="voteHeading">MAKE THE CALL</h2><span id="voteCount">0 VOTES</span></div>
         <div class="vote-clock"><span id="voteLabel">VOTE IN CHAT</span><strong id="timer">—</strong></div>
         <div class="clock-track"><i id="clockFill"></i></div>
         <div id="votes" class="votes"></div>
@@ -33,11 +33,11 @@
       </section>
       <aside class="right-rail">
         <section class="panel powers"><div class="panel-head"><h2>CHAT CHANGES THE GAME</h2></div><div id="raidPower" class="power"><span>RAID</span><strong id="raidLabel">Trigger a Super Over</strong></div><div id="freePower" class="power"><span>CHEER</span><strong id="freeLabel">Protect the next wicket</strong></div><div id="drsPower" class="power"><span>DRS REWARD</span><strong id="drsLabel">Review a wicket</strong></div></section>
-        <section class="panel mvp-panel"><div class="panel-head"><h2>CHAT MVPs</h2><span>RUN CREDIT</span></div><ol id="mvp" class="mvp"></ol><p class="panel-note">Pick the winning shot. Share its runs.</p></section>
+        <section class="panel mvp-panel"><div class="panel-head"><h2>CHAT MVPs</h2><span>RUN CREDIT</span></div><ol id="mvp" class="mvp"></ol><p class="panel-note">Each winning voter gets full run credit. Team runs count once.</p></section>
       </aside>
     </main>
     <aside class="ticker"><div class="ticker-tag">FROM THE<br>COMMENTARY BOX</div><p id="commentary" aria-live="polite">Connect your chat. Captain the chase.</p></aside>
-    <footer><span>TYPE A SHOT → CHAT PICKS → THE BALL PLAYS OUT</span><span id="footerNote">!drive · !pull · !sweep · !defend · !six</span></footer>
+    <footer><span id="footerAction">TYPE A SHOT → CHAT PICKS → THE BALL PLAYS OUT</span><span id="footerNote">!drive · !pull · !sweep · !defend · !six</span></footer>
   </div>
 </body>
 </html>

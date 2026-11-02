@@ -3,13 +3,17 @@
 const tmi = require('tmi.js');
 const WebSocket = require('ws');
 
+const NOTIFICATION_TTL_MS = 10 * 60 * 1000;
+const NOTIFICATION_LIMIT = 4096;
+
 function cleanToken(value = '') {
   return value.replace(/^oauth:/, '');
 }
 
 class TwitchBridge {
   constructor({ onMessage, onEvent, onStatus = () => {}, env = process.env,
-    socketFactory = url => new WebSocket(url), setTimer = setTimeout, clearTimer = clearTimeout }) {
+    socketFactory = url => new WebSocket(url), setTimer = setTimeout, clearTimer = clearTimeout,
+    now = () => performance.now() }) {
     this.env = env;
     this.onMessage = onMessage;
     this.onEvent = onEvent;
@@ -24,6 +28,8 @@ class TwitchBridge {
     this.clearTimer = clearTimer;
     this.eventConnections = new Map();
     this.reconnectTimer = null;
+    this.now = now;
+    this.notificationIds = new Map();
   }
 
   get chatConfigured() {
@@ -40,6 +46,9 @@ class TwitchBridge {
       this.onStatus('Mock mode: Twitch chat credentials not set');
       return false;
     }
+    // Choose one authority for powers for this connection lifetime. Switching
+    // during an outage can replay a delayed event after a ball or match reset.
+    const useEventSub = this.eventSubConfigured;
     this.chat = new tmi.Client({
       options: { debug: false },
       identity: {
@@ -55,11 +64,11 @@ class TwitchBridge {
       if (!self && !this.intentionalClose) this.onMessage(tags['display-name'] || tags.username || 'chatter', message);
     });
     this.chat.on('cheer', (_channel, tags) => {
-      if (this.intentionalClose) return;
+      if (this.intentionalClose || useEventSub) return;
       this.onEvent('cheer', { user: tags['display-name'], bits: Number(tags.bits || 0) });
     });
     this.chat.on('raided', (_channel, username, viewers) => {
-      if (this.intentionalClose) return;
+      if (this.intentionalClose || useEventSub) return;
       this.onEvent('raid', { user: username, viewers: Number(viewers || 0) });
     });
     await this.chat.connect();
@@ -68,7 +77,7 @@ class TwitchBridge {
       return false;
     }
     this.onStatus(`Connected to #${this.channel}`);
-    if (this.eventSubConfigured) this.connectEventSub();
+    if (useEventSub) this.connectEventSub();
     return true;
   }
 
@@ -182,7 +191,9 @@ class TwitchBridge {
           this.connectEventSub(reconnectUrl, socket);
         } else if ((kind === 'notification' || kind === 'session_keepalive') && state.welcomed) {
           arm();
-          if (kind === 'notification') this.routeNotification(packet.payload);
+          if (kind === 'notification' && this.acceptNotification(packet.metadata.message_id)) {
+            this.routeNotification(packet.payload);
+          }
         } else if (kind === 'revocation') {
           this.onStatus('EventSub subscription revoked; check authorization and reconnect');
         }
@@ -218,6 +229,24 @@ class TwitchBridge {
     }
   }
 
+  acceptNotification(id) {
+    if (typeof id !== 'string' || !id.trim() || id.length > 256) {
+      throw new Error('Invalid notification identity');
+    }
+    const now = this.now();
+    for (const [seenId, receivedAt] of this.notificationIds) {
+      if (now - receivedAt < NOTIFICATION_TTL_MS) break;
+      this.notificationIds.delete(seenId);
+    }
+    if (this.notificationIds.has(id)) return false;
+    if (this.notificationIds.size >= NOTIFICATION_LIMIT) {
+      this.notificationIds.delete(this.notificationIds.keys().next().value);
+    }
+    // Retain before callbacks: even a partial application must not replay.
+    this.notificationIds.set(id, now);
+    return true;
+  }
+
   routeNotification(payload) {
     if (this.intentionalClose) return;
     const type = payload.subscription?.type;
@@ -233,6 +262,7 @@ class TwitchBridge {
 
   async stop() {
     this.intentionalClose = true;
+    this.notificationIds.clear();
     this.abortController.abort();
     this.clearTimer(this.reconnectTimer);
     this.reconnectTimer = null;

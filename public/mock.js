@@ -59,8 +59,9 @@ function render(state) {
   $('status').textContent = `${state.status.toUpperCase()} · ${state.totalVotes} current votes · ${state.twitchStatus}`;
   $('voteState').textContent = state.demo ? 'SCRIPTED PLAYBACK' : state.status === 'voting' ? 'VOTING OPEN' : 'VOTING CLOSED';
   $('demo').textContent = state.demo ? '↻ Replay the showcase' : '▶ Play the showcase';
-  $('cue').textContent = state.demo?.cue || (state.mode === 'twitch' ? 'Twitch configured. Use MOCK_MODE=1 to rehearse the scripted showcase.' : 'Manual play is open between deliveries. Send a shot, then watch it play out.');
-  $('drsHint').textContent = state.drsUsed ? 'Review used' : state.canReview ? 'Wicket ready to review' : 'Wait for a wicket';
+  const prompts = CricketUI.matchPrompts(state);
+  $('cue').textContent = prompts.cue;
+  $('drsHint').textContent = prompts.drs;
   $('mode').textContent = state.demo ? 'SCRIPTED MOCK SHOWCASE' : state.mode === 'mock' ? 'MOCK CONTROL ROOM' : 'TWITCH CONTROL ROOM';
   controls();
 }

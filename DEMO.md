@@ -1,8 +1,12 @@
 # Recording plan — Chat Cricket Captain
 
-This is a proposed recording script, not a claim that a video has been recorded. The local rules summary requires a public YouTube video **under three minutes**, showing the app **working on Twitch** and **how it was built with Codex**. Record the final material in English and check the official rules before submitting.
+The full submission structure below remains proposed. A supplementary local mock recording now exists at `demo/chat-cricket-mock.mp4` (64.56 seconds, silent, permanent scripted-mock disclosure). See `demo/script.md` and `demo/checks.json`. It records the real engine's authored fixture at wall-clock speed, not live Twitch or OBS. The local rules summary requires a public YouTube video **under three minutes**, showing the app **working on Twitch** and **how it was built with Codex**. Those sections remain blocked. Record the final material in English and check the official rules before submitting.
 
 ## Rehearse locally now
+
+October 28 handoff: `demo/handoff/chat-cricket-mock.mp4`,64.56 seconds, actual fresh-copy wall-clock capture. Permanent scripted-mock/simulated-voters/no-Twitch-or-OBS caption; full decode and seven browser groups pass. See `demo/handoff/script.md`. Local lifecycle tests use fake events and a localhost WebSocket pair; those tests are not filmed as live Twitch evidence.
+
+Earlier local recording: `demo/boundary/chat-cricket-mock.mp4` (64.40 seconds). It repeats the complete actual scripted fixture against a freshly installed source copy after the request-boundary fixes. Script and seven passing browser checks are in `demo/boundary/`; full video decode passed. Older footage is preserved. No live Twitch/OBS or original Codex transcript proof was added.
 
 Run `npm install`, then `MOCK_MODE=1 npm start`. Open `/mock` and click **Play the showcase**. Use `/overlay` for a clean capture. The fixture chases 16 in six deliveries through the real engine:
 

@@ -54,7 +54,8 @@ test('real localhost WebSocket handoff closes both transports on stop', async t 
     }
     assert.fail('local WebSocket condition timed out');
   };
-  const packet = (peer, kind, payload) => peer.send(JSON.stringify({ metadata: { message_type: kind }, payload }));
+  let messageId = 0;
+  const packet = (peer, kind, payload, id = `fixture-${++messageId}`) => peer.send(JSON.stringify({ metadata: { message_type: kind, message_id: id }, payload }));
   server.on('connection', peer => peers.push(peer));
   bridge.connectEventSub();
   await until(() => peers.length === 1);
@@ -63,11 +64,16 @@ test('real localhost WebSocket handoff closes both transports on stop', async t 
   packet(peers[0], 'session_reconnect', { session: { reconnect_url: 'wss://eventsub.wss.twitch.tv/ws?local-fixture' } });
   await until(() => peers.length === 2);
   assert.equal(peers[0].readyState, WebSocket.OPEN);
-  packet(peers[0], 'notification', { subscription: { type: 'channel.cheer' }, event: { bits: 1 } });
+  const cheer = { subscription: { type: 'channel.cheer' }, event: { bits: 1 } };
+  packet(peers[0], 'notification', cheer, 'same-cheer');
   await until(() => events.length === 1);
   packet(peers[1], 'session_welcome', { session: { id: 'local-transfer', keepalive_timeout_seconds: 10 } });
   await until(() => peers[0].readyState === WebSocket.CLOSED);
   assert.deepEqual(calls, ['local-first']);
+  packet(peers[1], 'notification', cheer, 'same-cheer');
+  packet(peers[1], 'notification', { ...cheer, event: { bits: 2 } }, 'different-cheer');
+  await until(() => events.length >= 2);
+  assert.deepEqual(events.map(([, event]) => event.bits), [1, 2]);
   await bridge.stop();
   await until(() => peers[1].readyState === WebSocket.CLOSED);
 });

@@ -17,19 +17,32 @@ function json(response, status, value) {
 }
 
 async function readBody(request) {
-  let raw = '';
+  const chunks = [];
+  let bytes = 0;
   for await (const chunk of request) {
-    raw += chunk;
-    if (Buffer.byteLength(raw) > 8192) throw new Error('Request too large');
+    bytes += chunk.length;
+    if (bytes > 8192) throw new Error('Request too large');
+    chunks.push(chunk);
   }
+  const raw = new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
   const body = JSON.parse(raw || '{}');
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Expected an object');
   return body;
 }
 
+function allowedOrigin(request) {
+  const origin = request.headers.origin;
+  if (origin === undefined) return true; // Local CLI and OBS clients may omit Origin.
+  try {
+    const parsed = new URL(origin);
+    return (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+      parsed.origin === origin && parsed.host === request.headers.host;
+  } catch { return false; }
+}
+
 function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {}) {
   const sockets = new Set();
-  // PUBLIC_READONLY=1 exposes only the overlay (no control room, no POST actions) for safe tunnelling/hosting.
+  // PUBLIC_READONLY disables HTTP controls; overlay state, including names, remains readable.
   const readOnly = env.PUBLIC_READONLY === '1';
   const liveConfigured = env.MOCK_MODE !== '1' && Boolean(env.TWITCH_CHANNEL && env.TWITCH_BOT_USERNAME && env.TWITCH_OAUTH_TOKEN);
   let twitchStatus = liveConfigured ? 'Connecting to Twitch' : 'Mock mode · simulated events';
@@ -59,9 +72,11 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
       if (request.method === 'GET' && url.pathname === '/api/state') return json(response, 200, state());
       if (request.method === 'POST' && url.pathname.startsWith('/api/')) {
         // The control room is a local operator surface, not a public Twitch extension.
-        const origin = request.headers.origin;
-        if (origin && new URL(origin).host !== request.headers.host) {
+        if (!allowedOrigin(request)) {
           return json(response, 403, { ok: false, error: 'Use the control room on this server' });
+        }
+        if (request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase() !== 'application/json') {
+          return json(response, 415, { ok: false, error: 'Send application/json' });
         }
         const body = await readBody(request);
         if (url.pathname === '/api/message') {
@@ -98,7 +113,10 @@ function createApp({ env = process.env, bridgeFactory, matchOptions = {} } = {})
     }
   });
 
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({
+    server, path: '/ws',
+    verifyClient: ({ req }, done) => done(allowedOrigin(req), 403, 'Forbidden')
+  });
   wss.on('connection', socket => {
     sockets.add(socket);
     socket.on('error', () => {});

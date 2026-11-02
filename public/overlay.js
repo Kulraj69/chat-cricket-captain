@@ -1,6 +1,6 @@
 'use strict';
 const $ = id => document.getElementById(id);
-const { SHOTS, voteDisplay, countdown, resultPresentation } = CricketUI;
+const { SHOTS, voteDisplay, voteCopy, matchPrompts, countdown, resultPresentation } = CricketUI;
 let current;
 let connected = false;
 let offset = 0;
@@ -43,10 +43,10 @@ function drawEnd() {
   const ended = current && ['won', 'lost'].includes(current.status);
   $('end').hidden = !ended || revealing;
   if (!ended) return;
-  $('endKicker').textContent = current.demo ? 'SCRIPTED MOCK SHOWCASE · COMPLETE' : 'THE COMMUNITY HAS SPOKEN';
-  $('endTitle').textContent = current.status === 'won' ? 'CHAT WINS!' : 'INNINGS OVER';
+  $('endKicker').textContent = current.demo ? 'SCRIPTED MOCK SHOWCASE · COMPLETE' : 'INNINGS COMPLETE';
+  $('endTitle').textContent = current.status === 'won' ? (current.mvp.length ? 'CHAT WINS!' : 'CHASE COMPLETE') : 'INNINGS OVER';
   $('endDetail').textContent = `${current.score}/${current.wickets} after ${current.overs} overs · Target ${current.target}`;
-  $('endMvp').textContent = current.mvp.length ? `MVP · ${current.mvp[0].user} · ${current.mvp[0].runs} credited runs` : 'Every chase starts with a call. Play again from the control room.';
+  $('endMvp').textContent = current.mvp.length ? `MVP · ${current.mvp[0].user} · ${current.mvp[0].runs} credited runs` : 'No voter credit this innings. Play again from the control room.';
 }
 
 function render(state) {
@@ -54,25 +54,31 @@ function render(state) {
   for (const [id, value] of Object.entries({ runs: state.score, wickets: state.wickets, overs: state.overs,
     target: state.target, needed: state.runsNeeded, remaining: state.ballsRemaining, commentary: state.commentary })) $(id).textContent = value;
   $('mode').textContent = state.demo ? 'SCRIPTED MOCK SHOWCASE · SIMULATED VOTERS & EVENTS' : state.mode === 'mock' ? 'MOCK MATCH · SIMULATED CHAT & EVENTS' : `TWITCH · ${state.twitchStatus}`;
-  $('chaseLabel').textContent = state.status === 'won' ? 'CHASE COMPLETE' : state.ballsRemaining === 1 ? 'LAST BALL. MAKE IT COUNT.' : 'THE CHASE';
+  const prompts = matchPrompts(state);
+  const ended = ['won', 'lost'].includes(state.status);
+  $('voteHeading').textContent = ended ? 'FINAL TALLY' : state.status === 'voting' ? 'MAKE THE CALL' : 'DELIVERY TALLY';
+  $('footerAction').textContent = ended ? 'INNINGS COMPLETE' : 'TYPE A SHOT → CHAT PICKS → THE BALL PLAYS OUT';
+  $('footerNote').textContent = ended ? (state.canReview ? 'Review the wicket or reset from the control room.' : 'Reset from the control room to play again.') : '!drive · !pull · !sweep · !defend · !six';
+  $('chaseLabel').textContent = prompts.chase;
   $('chaseProgress').style.width = `${Math.min(100, state.score / state.target * 100)}%`;
   const votes = voteDisplay(state);
   $('voteCount').textContent = `${votes.total} VOTE${votes.total === 1 ? '' : 'S'}`;
-  $('voteLabel').textContent = votes.locked ? `CHAT CHOSE !${votes.winner.toUpperCase()}` : 'VOTE IN CHAT';
-  $('voteNote').textContent = votes.locked ? 'Final tally for the delivery. Winners share its runs.' : 'One vote each. Change your mind anytime.';
+  const copy = voteCopy(state);
+  $('voteLabel').textContent = copy.label;
+  $('voteNote').textContent = copy.note;
   for (const shot of SHOTS) {
     $(`n-${shot.name}`).textContent = votes.tally[shot.name];
     $(`b-${shot.name}`).style.width = `${votes.total ? votes.tally[shot.name] / votes.total * 100 : 0}%`;
     $(`v-${shot.name}`).classList.toggle('winner', votes.winner === shot.name);
   }
   $('ballNumber').textContent = state.status === 'voting' ? `BALL ${state.balls + 1} · ${state.superOver ? 'SUPER OVER' : 'COMMUNITY CHASE'}` : `BALL ${state.balls} · CALL LOCKED`;
-  $('ballStatus').textContent = state.status === 'voting' ? (state.freeHitNext ? 'FREE HIT. SWING FREELY.' : state.ballsRemaining === 1 ? 'ONE BALL. ONE CALL.' : 'YOUR CHAT. YOUR SHOT.') : 'CHAT CALLED IT.';
+  $('ballStatus').textContent = state.status === 'voting' ? (state.freeHitNext ? 'FREE HIT. SWING FREELY.' : state.ballsRemaining === 1 ? 'ONE BALL. ONE CALL.' : 'YOUR CHAT. YOUR SHOT.') : !votes.total ? 'NO VOTES. DEFAULT DEFEND.' : copy.label.startsWith('TIE') ? 'TIE. RANDOM SHOT PICKED.' : 'CHAT CALLED IT.';
   $('raidPower').classList.toggle('active', state.superOver);
-  $('raidLabel').textContent = state.superOver ? `SUPER OVER · ${state.ballsRemaining} balls left` : 'Trigger a Super Over';
+  $('raidLabel').textContent = prompts.raid;
   $('freePower').classList.toggle('active', state.freeHitNext);
-  $('freeLabel').textContent = state.freeHitNext ? 'FREE HIT ARMED' : state.lastResult?.freeHitSaved ? 'WICKET SAVED' : 'Protect the next wicket';
+  $('freeLabel').textContent = prompts.cheer;
   $('drsPower').classList.toggle('review', state.drsUsed);
-  $('drsLabel').textContent = state.drsUsed ? 'REVIEW USED' : state.canReview ? 'WICKET AVAILABLE TO REVIEW' : 'Review a wicket';
+  $('drsLabel').textContent = prompts.drs;
   const recent = state.recentBalls.map(ball => {
     const presentation = resultPresentation(ball);
     const chip = element('span', `ball-chip ${presentation.tone}`, ball.overturned ? 'DRS' : ball.freeHitSaved ? 'FH' : ball.outcome);
@@ -85,7 +91,7 @@ function render(state) {
     const row = element('li', 'person');
     row.append(element('span', 'rank', String(i + 1)), element('span', 'name', player.user), element('span', 'credit', String(player.runs)));
     return row;
-  }) : [element('li', 'mvp-empty', 'Your name belongs here. Vote for a shot to join the chase.')]));
+  }) : [element('li', 'mvp-empty', ended ? 'No voter credit this innings.' : 'Your name belongs here. Vote for a shot to join the chase.')]));
   drawClock(); drawEnd();
 }
 
